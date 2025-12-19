@@ -10,7 +10,7 @@ All endpoints require **authentication** using a valid token.
 ## 🔗 Base URL
 
 ```
-https://api.hrms.appleadng.net/hrms/
+https://api.example.com/api/
 ```
 
 > All endpoint paths below are **relative to this base URL**.
