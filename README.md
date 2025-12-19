@@ -1,146 +1,149 @@
-# 📘 Staff Management API Documentation
+---
+
+# 👥 Staff Management API Documentation
 
 This section documents all **Staff-related endpoints** exposed by the backend.
-All endpoints require **authentication**.
+All endpoints require **authentication** using a valid token.
 
 ---
 
 ## 🔗 Base URL
 
-All API endpoints are relative to the base URL below:
-
-```text
+```
 https://api.hrms.appleadng.net/hrms/
+```
 
+> All endpoint paths below are **relative to this base URL**.
+
+---
 
 ## 🔐 Authentication
 
-All endpoints require the user to be authenticated.
+All endpoints require authentication.
 
-**Headers**
+**Header**
 
 ```http
-Authorization: Bearer <access_token>
-Content-Type: application/json
+Authorization: Bearer <your_access_token>
 ```
 
 ---
 
-## 🧱 Staff Object (Response Shape)
+## 📦 Staff Serializer Response Format
 
-Most endpoints return a `Staff` object with the following structure:
+All endpoints that return staff data use the format below:
 
 ```json
 {
   "id": 1,
-  "full_name": "John Michael Doe",
-  "email": "john.doe@example.com",
+  "full_name": "John Doe",
+  "email": "john@example.com",
   "phone_number": "08012345678",
-  "date_of_birth": "1995-06-15",
-  "gender": "male",
-  "department": "Computer Science",
+  "date_of_birth": "1995-04-12",
+  "gender": "Male",
+  "department": "Engineering",
   "date_of_employment": "2023-01-10",
-  "employment_type": "full_time"
+  "employment_type": "Full-time"
 }
 ```
 
-> **Note**
-
-* `department` is returned as a **string (department name)**, not an object.
-* Some internal fields (salary, is_active, user info) are intentionally not exposed.
-
 ---
 
-## ➕ Add Staff
+## 1️⃣ Add Staff
 
-Create a new staff record and automatically create a linked user account.
+**Create a new staff profile and a linked user account**
 
-**Endpoint**
+* **Endpoint:** `POST /add_staff/`
+* **Auth:** ✅ Required
 
-```http
-POST /add_staff/
-```
-
-### Request Body
+### Request Body (JSON)
 
 ```json
 {
   "first_name": "John",
   "last_name": "Doe",
   "other_name": "Michael",
-  "email": "john.doe@example.com",
+  "full_name": "John Michael Doe",
+  "email": "john@example.com",
   "phone_number": "08012345678",
-  "date_of_birth": "1995-06-15",
-  "gender": "male",
-  "dept_code": "CSC",
+  "date_of_birth": "1995-04-12",
+  "gender": "Male",
+  "dept_code": "ENG",
   "date_of_employment": "2023-01-10",
-  "employment_type": "full_time"
+  "employment_type": "Full-time"
 }
 ```
 
-### Notes
+### Notes for Frontend
 
 * `email` is **required**
-* `dept_code` will auto-create the department if it does not exist
-* If `full_name` is not provided, it is auto-generated
-* A default password is assigned to the staff user (to be changed later)
+* `full_name` is auto-generated if not provided
+* A default password is auto-created for the staff user
+* Department is created automatically if `dept_code` does not exist
 
-### Success Response (201)
+### Success Response `201`
 
 Returns the newly created staff object.
 
+### Error Responses
+
+* `400` – Validation or server error
+
 ---
 
-## ✏️ Update Staff
+## 2️⃣ Update Staff
 
-Update an existing staff record.
+**Update an existing staff profile**
 
-**Endpoint**
+* **Endpoint:** `POST /update_staff/{staff_id}/`
+* **Auth:** ✅ Required
 
-```http
-POST /update_staff/{staff_id}/
-```
+### URL Params
 
-### Path Params
+| Param    | Type    | Description               |
+| -------- | ------- | ------------------------- |
+| staff_id | integer | ID of the staff to update |
 
-| Name     | Type   | Description               |
-| -------- | ------ | ------------------------- |
-| staff_id | number | ID of the staff to update |
-
-### Request Body (Partial Updates Allowed)
+### Request Body (Partial Update Allowed)
 
 ```json
 {
-  "email": "new.email@example.com",
+  "email": "newemail@example.com",
   "phone_number": "08099999999",
-  "dept_code": "ENG",
-  "employment_type": "contract"
+  "dept_code": "HR"
 }
 ```
 
-### Notes
+### Notes for Frontend
 
 * You can send **only the fields you want to update**
-* Updating `email` also updates the linked user's username
-* `full_name` is auto-regenerated if name fields change
+* Updating email also updates the linked user’s username
 
-### Success Response (200)
+### Success Response `200`
 
 Returns the updated staff object.
 
+### Error Responses
+
+* `404` – Staff not found
+* `400` – Validation or server error
+
 ---
 
-## 🗑️ Delete Staff
+## 3️⃣ Delete Staff
 
-Delete a staff record **and the linked user account**.
+**Delete a staff profile and its linked user**
 
-**Endpoint**
+* **Endpoint:** `DELETE /delete_staff/{staff_id}/`
+* **Auth:** ✅ Required
 
-```http
-DELETE /delete_staff/{staff_id}/
-```
+### URL Params
 
-### Success Response (200)
+| Param    | Type    | Description     |
+| -------- | ------- | --------------- |
+| staff_id | integer | ID of the staff |
+
+### Success Response `200`
 
 ```json
 {
@@ -150,63 +153,88 @@ DELETE /delete_staff/{staff_id}/
 
 ### Error Responses
 
-* `404` → Staff not found
+* `404` – Staff not found
+* `400` – Server error
 
 ---
 
-## 📋 List Staff
+## 4️⃣ List Staff
 
-Retrieve a list of staff with optional filters and search.
+**Fetch all staff with optional filters**
 
-**Endpoint**
-
-```http
-GET /list_staff/
-```
+* **Endpoint:** `GET /list_staff/`
+* **Auth:** ✅ Required
 
 ### Query Parameters (Optional)
 
-| Param           | Description               | Example     |
-| --------------- | ------------------------- | ----------- |
-| dept_code       | Filter by department code | `CSC`       |
-| employment_type | Filter by employment type | `full_time` |
-| search          | Search by name or email   | `john`      |
+| Param           | Type   | Description               |
+| --------------- | ------ | ------------------------- |
+| dept_code       | string | Filter by department code |
+| employment_type | string | Filter by employment type |
+| search          | string | Search by name or email   |
 
-### Example
+### Example Request
 
-```http
-GET /list_staff/?dept_code=CSC&search=john
+```
+GET /list_staff/?dept_code=ENG&search=john
 ```
 
-### Success Response (200)
+### Success Response `200`
 
-```json
-[
-  {
-    "id": 1,
-    "full_name": "John Doe",
-    "email": "john.doe@example.com",
-    "department": "Computer Science",
-    "employment_type": "full_time"
-  }
-]
-```
+Returns an array of staff objects.
 
 ---
 
-## 📤 Export Staff as CSV
+## 5️⃣ Get Staff by ID
 
-Download staff records as a CSV file.
+**Fetch a single staff by ID**
 
-**Endpoint**
+* **Endpoint:** `GET /get_staff_by_id/{staff_id}/`
+* **Auth:** ✅ Required
 
-```http
-GET /export_staff_csv/
-```
+### URL Params
 
-### Query Parameters
+| Param    | Type    | Description |
+| -------- | ------- | ----------- |
+| staff_id | integer | Staff ID    |
 
-Same as `list_staff`:
+### Success Response `200`
+
+Returns a staff object.
+
+### Error Responses
+
+* `404` – Staff not found
+
+---
+
+## 6️⃣ Get Logged-In Staff Profile
+
+**Fetch staff profile of the currently logged-in user**
+
+* **Endpoint:** `GET /get_my_staff_info/`
+* **Auth:** ✅ Required
+
+### Success Response `200`
+
+Returns the staff profile linked to the authenticated user.
+
+### Error Responses
+
+* `404` – Staff profile not found for user
+
+---
+
+## 7️⃣ Export Staff as CSV
+
+**Download staff list as a CSV file**
+
+* **Endpoint:** `GET /export_staff_csv/`
+* **Auth:** ✅ Required
+
+### Query Parameters (Optional)
+
+Same as **List Staff**:
 
 * `dept_code`
 * `employment_type`
@@ -214,125 +242,63 @@ Same as `list_staff`:
 
 ### Response
 
-* Content-Type: `text/csv`
-* Automatically downloads a file named:
-
-  ```
-  staff_export.csv
-  ```
+* File download (`staff_export.csv`)
+* `Content-Type: text/csv`
 
 ---
 
-## 📥 Upload Staff CSV (Bulk Import)
+## 8️⃣ Upload Staff CSV
 
-Upload a CSV file to import staff records **asynchronously**.
+**Upload a CSV file to import staff (processed asynchronously)**
 
-**Endpoint**
+* **Endpoint:** `POST /upload_staff_csv/`
+* **Auth:** ✅ Required
+* **Content-Type:** `multipart/form-data`
 
-```http
-POST /upload_staff_csv/
-```
+### Form Data
 
-### Request (Form Data)
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| file  | file | CSV file    |
 
-| Field | Type     | Required |
-| ----- | -------- | -------- |
-| file  | CSV file | ✅        |
-
-### Success Response (200)
+### Success Response `200`
 
 ```json
 {
   "message": "CSV received. Processing in background.",
-  "task_id": "b8c9f9b4-3e9d-4f3a-9e31-xxxx"
+  "task_id": "c9f1a9d2-xxxx"
 }
 ```
 
-> CSV processing is handled in the background using **Celery**.
+### Notes for Frontend
+
+* Use the returned `task_id` to track import progress
 
 ---
 
-## ⏳ Staff Import Status
+## 9️⃣ Check Staff Import Status
 
-Check the status of a CSV import task.
+**Check the status of a CSV import task**
 
-**Endpoint**
+* **Endpoint:** `GET /staff_import_status/{task_id}/`
+* **Auth:** ✅ Required
 
-```http
-GET /staff_import_status/{task_id}/
-```
+### URL Params
 
-### Success Response
+| Param   | Type   | Description    |
+| ------- | ------ | -------------- |
+| task_id | string | Celery task ID |
+
+### Success Response `200`
 
 ```json
 {
-  "task_id": "b8c9f9b4-3e9d-4f3a-9e31-xxxx",
+  "task_id": "c9f1a9d2-xxxx",
   "status": "SUCCESS",
-  "result": {
-    "imported": 120,
-    "skipped": 3
-  }
-}
-```
-
-### Status Values
-
-* `PENDING`
-* `STARTED`
-* `SUCCESS`
-* `FAILURE`
-
----
-
-## 👤 Get Staff by ID
-
-Retrieve a single staff record by ID.
-
-**Endpoint**
-
-```http
-GET /get_staff_by_id/{staff_id}/
-```
-
-### Success Response (200)
-
-Returns a single staff object.
-
-### Error Response
-
-* `404` → Staff not found
-
----
-
-## 🙋 Get Logged-in Staff Profile
-
-Retrieve the staff profile linked to the currently authenticated user.
-
-**Endpoint**
-
-```http
-GET /get_my_staff_info/
-```
-
-### Success Response (200)
-
-Returns the logged-in user's staff object.
-
-### Error Response
-
-* `404` → No staff profile linked to this user
-
----
-
-## ⚠️ Error Response Format
-
-All error responses follow this format:
-
-```json
-{
-  "error": "Error message here"
+  "result": "Imported 120 staff records"
 }
 ```
 
 ---
+
 
